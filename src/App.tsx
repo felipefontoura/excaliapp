@@ -3,13 +3,15 @@ import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/core'
 import { Sidebar } from './components/Sidebar'
 import { ExcalidrawEditor } from './components/ExcalidrawEditor'
+import { TabBar } from './components/TabBar'
+import { LaserPointer } from './components/LaserPointer'
 import { useStore } from './store/useStore'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useMenuHandler } from './hooks/useMenuHandler'
 import './index.css'
 
 function App() {
-  const { loadPreferences, loadDirectory, currentDirectory, sidebarVisible, isDirty, saveCurrentFile } = useStore()
+  const { loadPreferences, loadDirectory, currentDirectory, sidebarVisible, isDirty, saveCurrentFile, presentationMode } = useStore()
 
 
   // Load preferences and setup on mount
@@ -100,9 +102,13 @@ function App() {
   useMenuHandler()
 
   return (
-    <div className="h-screen flex bg-white text-gray-900 overflow-hidden">
-      {sidebarVisible && <Sidebar />}
-      <ExcalidrawEditor />
+    <div className={`h-screen flex bg-white dark:bg-[#1e1e1e] text-gray-900 dark:text-gray-100 overflow-hidden ${presentationMode ? 'cursor-none' : ''}`}>
+      {sidebarVisible && !presentationMode && <Sidebar />}
+      <div className="flex-1 flex flex-col min-w-0">
+        <TabBar />
+        <ExcalidrawEditor />
+      </div>
+      {presentationMode && <LaserPointer />}
     </div>
   )
 }

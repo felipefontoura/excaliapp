@@ -35,3 +35,9 @@ html, body, #root {
 .excalidraw .layer-ui__wrapper {
   z-index: 5;
 }
+
+/* Hide all cursors in presentation mode */
+.cursor-none,
+.cursor-none * {
+  cursor: none !important;
+}
