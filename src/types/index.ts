@@ -24,4 +24,5 @@ export interface Preferences {
   recentDirectories: string[]
   theme: 'light' | 'dark' | 'system'
   sidebarVisible: boolean
+  showDecorations: boolean
 }

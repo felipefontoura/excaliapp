@@ -30,6 +30,12 @@ pub struct Preferences {
     pub recent_directories: Vec<String>,
     pub theme: String,
     pub sidebar_visible: bool,
+    #[serde(default = "default_true")]
+    pub show_decorations: bool,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 impl Default for Preferences {
@@ -39,6 +45,7 @@ impl Default for Preferences {
             recent_directories: Vec::new(),
             theme: "system".to_string(),
             sidebar_visible: true,
+            show_decorations: true,
         }
     }
 }
@@ -523,6 +530,31 @@ async fn save_preferences(app: AppHandle, preferences: Preferences) -> Result<()
 }
 
 #[tauri::command]
+async fn set_menu_visible(app: AppHandle, visible: bool) -> Result<(), String> {
+    let window = app.get_webview_window("main").ok_or("No main window")?;
+    if visible {
+        let menu = menu::create_menu(&app).map_err(|e| e.to_string())?;
+        window.set_menu(menu).map_err(|e| e.to_string())?;
+    } else {
+        window.remove_menu().map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+async fn set_decorations(app: AppHandle, visible: bool) -> Result<(), String> {
+    let window = app.get_webview_window("main").ok_or("No main window")?;
+    window.set_decorations(visible).map_err(|e| e.to_string())?;
+    if visible {
+        let menu = menu::create_menu(&app).map_err(|e| e.to_string())?;
+        window.set_menu(menu).map_err(|e| e.to_string())?;
+    } else {
+        window.remove_menu().map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
 async fn force_close_app(app: AppHandle) -> Result<(), String> {
     app.exit(0);
     Ok(())
@@ -642,6 +674,8 @@ pub fn run() {
             get_preferences,
             save_preferences,
             watch_directory,
+            set_menu_visible,
+            set_decorations,
             force_close_app,
         ])
         .run(tauri::generate_context!())
