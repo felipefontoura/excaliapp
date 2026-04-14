@@ -10,6 +10,7 @@ export function useKeyboardShortcuts() {
     activeFile,
     loadFile,
     createNewFile,
+    togglePresentationMode,
   } = useStore()
 
   useEffect(() => {
@@ -20,6 +21,18 @@ export function useKeyboardShortcuts() {
       // Don't handle any events if clipboard operations are being used
       // Let Excalidraw handle all clipboard operations natively
       if (modKey && (e.key === 'c' || e.key === 'v' || e.key === 'x' || e.key === 'a')) {
+        return
+      }
+
+      // F5 or Escape: Toggle presentation mode
+      if (e.key === 'F5') {
+        e.preventDefault()
+        togglePresentationMode()
+        return
+      }
+      if (e.key === 'Escape' && useStore.getState().presentationMode) {
+        e.preventDefault()
+        togglePresentationMode()
         return
       }
 
@@ -88,5 +101,5 @@ export function useKeyboardShortcuts() {
     // Use non-capturing phase to let Excalidraw handle events first
     window.addEventListener('keydown', handleKeyDown, false)
     return () => window.removeEventListener('keydown', handleKeyDown, false)
-  }, [toggleSidebar, saveCurrentFile, files, activeFile, loadFile, createNewFile])
+  }, [toggleSidebar, saveCurrentFile, files, activeFile, loadFile, createNewFile, togglePresentationMode])
 }
