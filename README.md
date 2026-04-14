@@ -9,10 +9,12 @@ A free, open-source desktop application for managing and editing local Excalidra
 - 📁 **Local File Management**: Browse and organize your Excalidraw files directly from your filesystem
 - 🎨 **Full Excalidraw Editor**: Complete drawing and diagramming capabilities with the official Excalidraw editor
 - 💾 **Auto-Save**: Never lose your work with automatic saving every 30 seconds
-- 🚀 **Fast File Switching**: Quickly navigate between multiple drawings
+- 📑 **Tab System**: Open multiple files as tabs for quick switching between drawings
+- 🎯 **Presentation Mode**: Present your drawings with a built-in laser pointer (F5)
 - 🌲 **Tree View Navigation**: Hierarchical file browser for better organization
-- 🎯 **Native Menus**: Platform-specific menus with keyboard shortcuts
-- 🌓 **Theme Support**: Light, dark, and system theme options
+- 🎭 **Native Menus**: Platform-specific menus with keyboard shortcuts (toggleable)
+- 🌓 **Theme Support**: Light, dark, and system theme options with full dark mode UI
+- 🖥️ **Chromeless Mode**: Hide title bar and menus for a distraction-free experience
 - 🔒 **Security First**: Path validation and content sanitization for safe file operations
 
 ## Installation
@@ -36,7 +38,7 @@ A free, open-source desktop application for managing and editing local Excalidra
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/excaliapp.git
+git clone https://github.com/tyrchen/excaliapp.git
 cd excaliapp
 
 # Install dependencies
@@ -60,28 +62,40 @@ The built application will be in `src-tauri/target/release/bundle/`
 2. **Select a Directory**:
    - On first launch, you'll be prompted to select a folder containing your Excalidraw files
    - The app remembers your last selected directory for future sessions
-   - Use `File → Open Directory` (Ctrl/Cmd+O) to change directories anytime
+   - Use `File > Open Directory` (Ctrl/Cmd+O) to change directories anytime
 
 3. **Create or Edit Files**:
-   - Click "New File" or use `File → New File` (Ctrl/Cmd+N) to create a new drawing
-   - Click any file in the sidebar to open it for editing
+   - Click "New File" or use `File > New File` (Ctrl/Cmd+N) to create a new drawing
+   - Click any file in the sidebar to open it as a tab
    - Your changes are automatically saved every 30 seconds
 
 4. **Navigate Between Files**:
    - Use the tree view sidebar to browse your file structure
-   - Click on folders to expand/collapse them
-   - Files are sorted with folders first, then alphabetically
+   - Open files appear as tabs above the editor
+   - Click tabs or use Ctrl+Tab to switch between open drawings
+
+5. **Present Your Drawings**:
+   - Press F5 to enter presentation mode
+   - All editing UI is hidden, leaving only your drawing and tabs
+   - A laser pointer follows your cursor for highlighting content
+   - Press Escape or F5 again to exit
 
 ### Keyboard Shortcuts
 
-| Action         | Windows/Linux | macOS       |
-| -------------- | ------------- | ----------- |
-| New File       | Ctrl+N        | Cmd+N       |
-| Open Directory | Ctrl+O        | Cmd+O       |
-| Save           | Ctrl+S        | Cmd+S       |
-| Save As        | Ctrl+Shift+S  | Cmd+Shift+S |
-| Toggle Sidebar | Ctrl+B        | Cmd+B       |
-| Quit           | Ctrl+Q        | Cmd+Q       |
+| Action                    | Windows/Linux    | macOS            |
+| ------------------------- | ---------------- | ---------------- |
+| New File                  | Ctrl+N           | Cmd+N            |
+| Open Directory            | Ctrl+O           | Cmd+O            |
+| Save                      | Ctrl+S           | Cmd+S            |
+| Save As                   | Ctrl+Shift+S     | Cmd+Shift+S      |
+| Toggle Sidebar            | Ctrl+B           | Cmd+B            |
+| Close Tab                 | Ctrl+W           | Cmd+W            |
+| Next Tab                  | Ctrl+Tab         | Cmd+Tab          |
+| Previous Tab              | Ctrl+Shift+Tab   | Cmd+Shift+Tab    |
+| Presentation Mode         | F5               | F5               |
+| Exit Presentation         | Escape           | Escape           |
+| Toggle Title Bar & Menu   | Ctrl+Shift+D     | Cmd+Shift+D      |
+| Quit                      | Ctrl+Q           | Cmd+Q            |
 
 ### File Operations
 
@@ -89,6 +103,24 @@ The built application will be in `src-tauri/target/release/bundle/`
 - **Rename**: Right-click on a file and select "Rename"
 - **Delete**: Right-click on a file and select "Delete"
 - **Auto-save**: Files are automatically saved every 30 seconds and when switching between files
+
+### Presentation Mode
+
+ExcaliApp includes a presentation mode designed for teaching and presenting diagrams:
+
+- **Enter**: Press **F5** to activate presentation mode
+- **Laser Pointer**: A red laser pointer dot follows your cursor with a fading trail, perfect for highlighting elements during presentations
+- **Tab Navigation**: Tabs remain visible so you can switch between drawings during your presentation
+- **Clean UI**: All editing toolbars, sidebar, and menus are hidden for a distraction-free view
+- **Exit**: Press **Escape** or **F5** again to return to editing
+
+### Chromeless Mode
+
+For tiling window managers (Hyprland, i3, Sway) or users who prefer a minimal UI:
+
+- Press **Ctrl+Shift+D** to toggle the title bar and native menus
+- This preference persists across sessions
+- All functionality remains accessible via keyboard shortcuts
 
 ## Architecture
 
@@ -168,7 +200,7 @@ sequenceDiagram
 - **Drawing Engine**: [@excalidraw/excalidraw](https://github.com/excalidraw/excalidraw)
 - **Build Tool**: [Vite](https://vitejs.dev/)
 - **UI Components**: [shadcn/ui](https://ui.shadcn.com/) with [Tailwind CSS](https://tailwindcss.com/)
-- **State Management**: React hooks with local storage persistence
+- **State Management**: [Zustand](https://github.com/pmndrs/zustand) with persistent preferences
 
 ### Security Features
 
@@ -187,6 +219,8 @@ excaliapp/
 │   ├── components/         # React components
 │   │   ├── Sidebar.tsx    # File browser sidebar
 │   │   ├── TreeView.tsx   # Hierarchical file tree
+│   │   ├── TabBar.tsx     # Tab bar for open files
+│   │   ├── LaserPointer.tsx # Presentation laser pointer
 │   │   └── ExcalidrawEditor.tsx # Editor wrapper
 │   ├── hooks/             # Custom React hooks
 │   ├── lib/               # Utilities
