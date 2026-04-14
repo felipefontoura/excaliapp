@@ -14,6 +14,8 @@ interface AppStore {
   preferences: Preferences
   sidebarVisible: boolean
   isDirty: boolean
+  presentationMode: boolean
+  openTabs: ExcalidrawFile[]
 
   // Actions
   setCurrentDirectory: (dir: string | null) => void
@@ -26,7 +28,10 @@ interface AppStore {
   setIsDirty: (dirty: boolean) => void
   markFileAsModified: (filePath: string, modified: boolean) => void
   markTreeNodeAsModified: (filePath: string, modified: boolean) => void
-  
+  togglePresentationMode: () => void
+  closeTab: (filePath: string) => Promise<void>
+  toggleDecorations: () => void
+
   // Async actions
   loadDirectory: (dir: string) => Promise<void>
   loadFileTree: (dir: string) => Promise<void>
@@ -53,9 +58,12 @@ export const useStore = create<AppStore>((set, get) => ({
     recentDirectories: [],
     theme: 'system',
     sidebarVisible: true,
+    showDecorations: true,
   },
   sidebarVisible: true,
   isDirty: false,
+  presentationMode: false,
+  openTabs: [],
 
   // Basic setters
   setCurrentDirectory: (dir) => set({ currentDirectory: dir }),
@@ -70,6 +78,9 @@ export const useStore = create<AppStore>((set, get) => ({
   markFileAsModified: (filePath, modified) => {
     set((state) => ({
       files: state.files.map((f) =>
+        f.path === filePath ? { ...f, modified } : f
+      ),
+      openTabs: state.openTabs.map((f) =>
         f.path === filePath ? { ...f, modified } : f
       ),
     }))
@@ -186,12 +197,17 @@ export const useStore = create<AppStore>((set, get) => ({
         filePath: file.path,
       })
       
+      // Add to openTabs if not already there
+      const existingTab = get().openTabs.find(t => t.path === file.path)
+      const newTabs = existingTab ? get().openTabs : [...get().openTabs, file]
+
       set({
         activeFile: file,
         fileContent: content,
         isDirty: false,
+        openTabs: newTabs,
       })
-      
+
       // Clear modified state for this file
       state.markFileAsModified(file.path, false)
       state.markTreeNodeAsModified(file.path, false)
@@ -266,10 +282,15 @@ export const useStore = create<AppStore>((set, get) => ({
         path: node.path,
         modified: node.modified,
       }
-      
+
+      // Add to openTabs if not already there
+      const existingTab = get().openTabs.find(t => t.path === file.path)
+      const newTabs = existingTab ? get().openTabs : [...get().openTabs, file]
+
       set({
         activeFile: file,
         fileContent: content,
+        openTabs: newTabs,
         // Don't change isDirty here - it will be set to false by ExcalidrawEditor after loading
       })
       
@@ -520,7 +541,12 @@ export const useStore = create<AppStore>((set, get) => ({
         preferences: safePrefs,
         sidebarVisible: safePrefs.sidebarVisible,
       })
-      
+
+      // Apply decorations preference
+      if (safePrefs.showDecorations === false) {
+        invoke('set_decorations', { visible: false })
+      }
+
       // Apply theme
       const root = document.documentElement
       if (safePrefs.theme === 'dark') {
@@ -558,6 +584,7 @@ export const useStore = create<AppStore>((set, get) => ({
         recentDirectories: [],
         theme: 'system',
         sidebarVisible: true,
+        showDecorations: true,
       }
       set({
         preferences: defaultPrefs,
@@ -583,11 +610,87 @@ export const useStore = create<AppStore>((set, get) => ({
     const state = get()
     const newVisible = !state.sidebarVisible
     set({ sidebarVisible: newVisible })
-    
+
     // Update preferences
     const newPrefs = { ...state.preferences, sidebarVisible: newVisible }
     set({ preferences: newPrefs })
     state.savePreferences()
+  },
+
+  // Toggle presentation mode
+  togglePresentationMode: () => {
+    const state = get()
+    const entering = !state.presentationMode
+    set({ presentationMode: entering })
+
+    if (entering) {
+      // Hide menu when entering presentation mode
+      invoke('set_menu_visible', { visible: false })
+    } else {
+      // Show menu when exiting, respecting decorations preference
+      if (state.preferences.showDecorations) {
+        invoke('set_menu_visible', { visible: true })
+      }
+    }
+  },
+
+  // Toggle decorations
+  toggleDecorations: () => {
+    const state = get()
+    const newVisible = !state.preferences.showDecorations
+    invoke('set_decorations', { visible: newVisible })
+    const newPrefs = { ...state.preferences, showDecorations: newVisible }
+    set({ preferences: newPrefs })
+    get().savePreferences()
+  },
+
+  // Close tab
+  closeTab: async (filePath) => {
+    const state = get()
+    const tabIndex = state.openTabs.findIndex(t => t.path === filePath)
+    if (tabIndex === -1) return
+
+    const tab = state.openTabs[tabIndex]
+
+    // Check for unsaved changes if this is the active file
+    if (state.activeFile?.path === filePath && state.isDirty) {
+      const response = await ask(
+        `Do you want to save changes to "${tab.name}" before closing?`,
+        {
+          title: 'Unsaved Changes',
+          kind: 'warning',
+          okLabel: 'Save',
+          cancelLabel: "Don't Save"
+        }
+      )
+
+      if (response === true) {
+        await state.saveCurrentFile()
+      } else if (response === null) {
+        return
+      }
+    }
+
+    const newTabs = state.openTabs.filter(t => t.path !== filePath)
+
+    if (state.activeFile?.path === filePath) {
+      // Switch to adjacent tab
+      if (newTabs.length > 0) {
+        const newIndex = Math.min(tabIndex, newTabs.length - 1)
+        const newActiveTab = newTabs[newIndex]
+        set({ openTabs: newTabs })
+        await get().loadFile(newActiveTab)
+      } else {
+        set({
+          openTabs: newTabs,
+          activeFile: null,
+          fileContent: null,
+          isDirty: false,
+        })
+      }
+    } else {
+      set({ openTabs: newTabs })
+    }
   },
 
 }))
