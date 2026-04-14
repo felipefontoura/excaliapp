@@ -122,8 +122,8 @@ const TreeNode = memo(function TreeNode({ node, onFileClick, activeFilePath, dep
       <div
         className={cn(
           'w-full flex items-center gap-2 px-3 py-2 rounded-md text-left transition-colors group relative',
-          'hover:bg-gray-100 hover:text-gray-900',
-          isActive && 'bg-blue-50 text-blue-900',
+          'hover:bg-[#333] hover:text-white',
+          isActive && 'bg-blue-900/30 text-blue-300',
           node.modified && 'font-semibold'
         )}
         style={{ paddingLeft: `${8 + depth * 20}px` }}
@@ -149,7 +149,7 @@ const TreeNode = memo(function TreeNode({ node, onFileClick, activeFilePath, dep
             <Folder className="w-4 h-4 flex-shrink-0 text-blue-600" />
           )
         ) : (
-          <File className="w-4 h-4 flex-shrink-0 text-gray-600" />
+          <File className="w-4 h-4 flex-shrink-0 text-gray-400" />
         )}
         
         {isRenaming ? (
@@ -167,7 +167,7 @@ const TreeNode = memo(function TreeNode({ node, onFileClick, activeFilePath, dep
                 setIsRenaming(false)
               }
             }}
-            className="flex-1 text-sm px-1 py-0 border border-blue-500 rounded outline-none"
+            className="flex-1 text-sm px-1 py-0 border border-blue-500 rounded outline-none bg-[#333] text-gray-100"
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
@@ -183,7 +183,7 @@ const TreeNode = memo(function TreeNode({ node, onFileClick, activeFilePath, dep
         {!node.is_directory && (
           <button
             onClick={handleMenuClick}
-            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded transition-opacity"
+            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-[#444] rounded transition-opacity"
           >
             <MoreVertical className="w-3 h-3" />
           </button>
@@ -197,7 +197,7 @@ const TreeNode = memo(function TreeNode({ node, onFileClick, activeFilePath, dep
       {/* Context Menu */}
       {showMenu && !node.is_directory && (
         <div 
-          className="absolute right-0 top-8 z-50 bg-white rounded-md shadow-lg border border-gray-200 py-1 min-w-[150px]"
+          className="absolute right-0 top-8 z-50 bg-[#2a2a2a] rounded-md shadow-lg border border-[#3a3a3a] py-1 min-w-[150px]"
           onMouseLeave={() => setShowMenu(false)}
         >
           <button
@@ -206,7 +206,7 @@ const TreeNode = memo(function TreeNode({ node, onFileClick, activeFilePath, dep
               setIsRenaming(true)
               setShowMenu(false)
             }}
-            className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
+            className="w-full px-3 py-2 text-left text-sm hover:bg-[#333] text-gray-200 flex items-center gap-2"
           >
             <Edit2 className="w-3 h-3" />
             Rename
@@ -216,7 +216,7 @@ const TreeNode = memo(function TreeNode({ node, onFileClick, activeFilePath, dep
               console.log('Delete button clicked!')
               handleDelete(e)
             }}
-            className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2 text-red-600"
+            className="w-full px-3 py-2 text-left text-sm hover:bg-[#333] flex items-center gap-2 text-red-400"
           >
             <Trash2 className="w-3 h-3" />
             Delete
@@ -244,7 +244,7 @@ const TreeNode = memo(function TreeNode({ node, onFileClick, activeFilePath, dep
 export function TreeView({ nodes, onFileClick, activeFilePath }: TreeViewProps) {
   if (nodes.length === 0) {
     return (
-      <div className="text-sm text-gray-500 text-center py-8">
+      <div className="text-sm text-gray-400 text-center py-8">
         No .excalidraw files found
       </div>
     )

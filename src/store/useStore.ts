@@ -14,6 +14,7 @@ interface AppStore {
   preferences: Preferences
   sidebarVisible: boolean
   isDirty: boolean
+  presentationMode: boolean
 
   // Actions
   setCurrentDirectory: (dir: string | null) => void
@@ -39,6 +40,7 @@ interface AppStore {
   loadPreferences: () => Promise<void>
   savePreferences: () => Promise<void>
   toggleSidebar: () => void
+  togglePresentationMode: () => void
 }
 
 export const useStore = create<AppStore>((set, get) => ({
@@ -51,11 +53,12 @@ export const useStore = create<AppStore>((set, get) => ({
   preferences: {
     lastDirectory: null,
     recentDirectories: [],
-    theme: 'system',
+    theme: 'dark',
     sidebarVisible: true,
   },
   sidebarVisible: true,
   isDirty: false,
+  presentationMode: false,
 
   // Basic setters
   setCurrentDirectory: (dir) => set({ currentDirectory: dir }),
@@ -583,11 +586,16 @@ export const useStore = create<AppStore>((set, get) => ({
     const state = get()
     const newVisible = !state.sidebarVisible
     set({ sidebarVisible: newVisible })
-    
+
     // Update preferences
     const newPrefs = { ...state.preferences, sidebarVisible: newVisible }
     set({ preferences: newPrefs })
     state.savePreferences()
+  },
+
+  // Toggle presentation mode (hides UI, enables laser pointer)
+  togglePresentationMode: () => {
+    set({ presentationMode: !get().presentationMode })
   },
 
 }))

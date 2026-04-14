@@ -10,6 +10,7 @@ import { TIMING } from '../constants'
 export function ExcalidrawEditor() {
   const activeFile = useStore(state => state.activeFile)
   const fileContent = useStore(state => state.fileContent)
+  const presentationMode = useStore(state => state.presentationMode)
   const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const lastSavedContentRef = useRef<string>('')
@@ -215,7 +216,7 @@ export function ExcalidrawEditor() {
 
   if (!activeFile) {
     return (
-      <div className="flex-1 flex items-center justify-center text-muted-foreground">
+      <div className="fixed inset-0 flex items-center justify-center text-gray-400 pointer-events-none">
         <div className="text-center">
           <p className="text-lg mb-2">No file selected</p>
           <p className="text-sm">Select a file from the sidebar to start editing</p>
@@ -229,10 +230,10 @@ export function ExcalidrawEditor() {
     <div className="flex-1 h-full relative" key={activeFile.path}>
       {/* Loading overlay */}
       {isLoading && (
-        <div className="absolute inset-0 z-50 bg-white flex items-center justify-center">
+        <div className="absolute inset-0 z-50 bg-[#1e1e1e] flex items-center justify-center">
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-solid border-blue-600 border-r-transparent mb-2"></div>
-            <p className="text-sm text-gray-600">Loading...</p>
+            <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-solid border-blue-500 border-r-transparent mb-2"></div>
+            <p className="text-sm text-gray-400">Loading...</p>
           </div>
         </div>
       )}
@@ -246,6 +247,8 @@ export function ExcalidrawEditor() {
             setGlobalExcalidrawAPI(api)
           }}
           onChange={handleChange}
+          theme="dark"
+          viewModeEnabled={presentationMode}
           UIOptions={{
             canvasActions: {
               loadScene: false,
