@@ -15,6 +15,7 @@ interface AppStore {
   sidebarVisible: boolean
   isDirty: boolean
   presentationMode: boolean
+  openTabs: ExcalidrawFile[]
 
   // Actions
   setCurrentDirectory: (dir: string | null) => void
@@ -41,6 +42,7 @@ interface AppStore {
   savePreferences: () => Promise<void>
   toggleSidebar: () => void
   togglePresentationMode: () => void
+  closeTab: (filePath: string) => Promise<void>
 }
 
 export const useStore = create<AppStore>((set, get) => ({
@@ -59,6 +61,7 @@ export const useStore = create<AppStore>((set, get) => ({
   sidebarVisible: true,
   isDirty: false,
   presentationMode: false,
+  openTabs: [],
 
   // Basic setters
   setCurrentDirectory: (dir) => set({ currentDirectory: dir }),
@@ -74,6 +77,9 @@ export const useStore = create<AppStore>((set, get) => ({
     set((state) => ({
       files: state.files.map((f) =>
         f.path === filePath ? { ...f, modified } : f
+      ),
+      openTabs: state.openTabs.map((t) =>
+        t.path === filePath ? { ...t, modified } : t
       ),
     }))
   },
@@ -189,12 +195,17 @@ export const useStore = create<AppStore>((set, get) => ({
         filePath: file.path,
       })
       
+      // Add to open tabs if not already there
+      const tabs = get().openTabs
+      const alreadyOpen = tabs.some(t => t.path === file.path)
+
       set({
         activeFile: file,
         fileContent: content,
         isDirty: false,
+        openTabs: alreadyOpen ? tabs : [...tabs, file],
       })
-      
+
       // Clear modified state for this file
       state.markFileAsModified(file.path, false)
       state.markTreeNodeAsModified(file.path, false)
@@ -269,10 +280,15 @@ export const useStore = create<AppStore>((set, get) => ({
         path: node.path,
         modified: node.modified,
       }
-      
+
+      // Add to open tabs if not already there
+      const tabs = get().openTabs
+      const alreadyOpen = tabs.some(t => t.path === file.path)
+
       set({
         activeFile: file,
         fileContent: content,
+        openTabs: alreadyOpen ? tabs : [...tabs, file],
         // Don't change isDirty here - it will be set to false by ExcalidrawEditor after loading
       })
       
@@ -596,6 +612,48 @@ export const useStore = create<AppStore>((set, get) => ({
   // Toggle presentation mode (hides UI, enables laser pointer)
   togglePresentationMode: () => {
     set({ presentationMode: !get().presentationMode })
+  },
+
+  // Close a tab
+  closeTab: async (filePath) => {
+    const state = get()
+    const tabs = state.openTabs
+    const tabIndex = tabs.findIndex(t => t.path === filePath)
+    if (tabIndex === -1) return
+
+    // If closing the active tab and it's dirty, ask to save
+    if (state.activeFile?.path === filePath && state.isDirty) {
+      const response = await ask(
+        `Do you want to save changes to "${state.activeFile.name}" before closing?`,
+        {
+          title: 'Unsaved Changes',
+          kind: 'warning',
+          okLabel: 'Save',
+          cancelLabel: "Don't Save"
+        }
+      )
+      if (response === true) {
+        await state.saveCurrentFile()
+      } else if (response === null) {
+        return
+      }
+    }
+
+    const newTabs = tabs.filter(t => t.path !== filePath)
+
+    // If closing the active tab, switch to an adjacent one
+    if (state.activeFile?.path === filePath) {
+      if (newTabs.length === 0) {
+        set({ openTabs: newTabs, activeFile: null, fileContent: null, isDirty: false })
+      } else {
+        const nextIndex = Math.min(tabIndex, newTabs.length - 1)
+        const nextFile = newTabs[nextIndex]
+        set({ openTabs: newTabs })
+        await get().loadFile(nextFile)
+      }
+    } else {
+      set({ openTabs: newTabs })
+    }
   },
 
 }))

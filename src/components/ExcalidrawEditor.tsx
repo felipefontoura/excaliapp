@@ -227,7 +227,7 @@ export function ExcalidrawEditor() {
 
   // Use key prop to force remount when switching files
   return (
-    <div className="flex-1 h-full relative" key={activeFile.path}>
+    <div className="flex-1 min-h-0 relative" key={activeFile.path}>
       {/* Loading overlay */}
       {isLoading && (
         <div className="absolute inset-0 z-50 bg-[#1e1e1e] flex items-center justify-center">

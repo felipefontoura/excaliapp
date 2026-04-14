@@ -3,6 +3,7 @@ import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/core'
 import { Sidebar } from './components/Sidebar'
 import { ExcalidrawEditor } from './components/ExcalidrawEditor'
+import { TabBar } from './components/TabBar'
 import { LaserPointer } from './components/LaserPointer'
 import { useStore } from './store/useStore'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
@@ -103,7 +104,10 @@ function App() {
   return (
     <div className={`h-screen flex bg-[#1e1e1e] text-gray-100 overflow-hidden ${presentationMode ? 'cursor-none' : ''}`}>
       {sidebarVisible && !presentationMode && <Sidebar />}
-      <ExcalidrawEditor />
+      <div className="flex-1 flex flex-col min-w-0">
+        <TabBar />
+        <ExcalidrawEditor />
+      </div>
       {presentationMode && <LaserPointer />}
     </div>
   )

@@ -6,11 +6,12 @@ export function useKeyboardShortcuts() {
   const {
     toggleSidebar,
     saveCurrentFile,
-    files,
+    openTabs,
     activeFile,
     loadFile,
     createNewFile,
     togglePresentationMode,
+    closeTab,
   } = useStore()
 
   useEffect(() => {
@@ -77,23 +78,23 @@ export function useKeyboardShortcuts() {
         await createNewFile(fileName)
       }
 
-      // Cmd/Ctrl + Tab: Switch to next file
-      if (modKey && e.key === 'Tab') {
+      // Cmd/Ctrl + W: Close current tab
+      if (modKey && e.key === 'w') {
         e.preventDefault()
-        if (files.length > 1 && activeFile) {
-          const currentIndex = files.findIndex((f) => f.path === activeFile.path)
-          const nextIndex = (currentIndex + 1) % files.length
-          await loadFile(files[nextIndex])
+        if (activeFile) {
+          await closeTab(activeFile.path)
         }
       }
 
-      // Cmd/Ctrl + Shift + Tab: Switch to previous file
-      if (modKey && e.shiftKey && e.key === 'Tab') {
+      // Cmd/Ctrl + Tab: Switch to next tab
+      if (modKey && e.key === 'Tab') {
         e.preventDefault()
-        if (files.length > 1 && activeFile) {
-          const currentIndex = files.findIndex((f) => f.path === activeFile.path)
-          const prevIndex = currentIndex === 0 ? files.length - 1 : currentIndex - 1
-          await loadFile(files[prevIndex])
+        if (openTabs.length > 1 && activeFile) {
+          const currentIndex = openTabs.findIndex((f) => f.path === activeFile.path)
+          const nextIndex = e.shiftKey
+            ? (currentIndex === 0 ? openTabs.length - 1 : currentIndex - 1)
+            : (currentIndex + 1) % openTabs.length
+          await loadFile(openTabs[nextIndex])
         }
       }
     }
@@ -101,5 +102,5 @@ export function useKeyboardShortcuts() {
     // Use non-capturing phase to let Excalidraw handle events first
     window.addEventListener('keydown', handleKeyDown, false)
     return () => window.removeEventListener('keydown', handleKeyDown, false)
-  }, [toggleSidebar, saveCurrentFile, files, activeFile, loadFile, createNewFile, togglePresentationMode])
+  }, [toggleSidebar, saveCurrentFile, openTabs, activeFile, loadFile, createNewFile, togglePresentationMode, closeTab])
 }
